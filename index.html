@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting to JazzCash...</title>
+</head>
+<body>
+  <p>Redirecting to JazzCash, please wait...</p>
+  <form id="f" method="POST"></form>
+  <script>
+    // Reads the `data` query param (base64url JSON of the already-signed
+    // pp_ fields — signed server-side with the Integrity Salt, which never
+    // reaches this page), builds a hidden form, and submits it to
+    // JazzCash's hosted merchant form. Hosted on GitHub Pages (not a
+    // Supabase Edge Function or Storage, which both force any HTML response
+    // into a sandboxed text/plain + CSP, and not a local file://, which
+    // JazzCash's firewall rejects for sending a "null" Origin/Referer on
+    // the cross-origin POST) so the POST carries a legitimate https://
+    // origin.
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get('data');
+    const portalUrl = params.get('portal');
+    if (!data || !portalUrl) {
+      document.body.innerHTML = '<p>Missing payment data.</p>';
+    } else {
+      const json = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
+      const fields = JSON.parse(json);
+      const form = document.getElementById('f');
+      form.action = portalUrl;
+      for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      }
+      form.submit();
+    }
+  </script>
+</body>
+</html>
